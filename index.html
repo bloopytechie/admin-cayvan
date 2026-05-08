@@ -1000,13 +1000,18 @@ function getOrderLocationDetail(o) {
 function buildOrderCard(o, showArchiveBtn=true) {
   const itemsStr = o.items.map(i=>`${i.name} × ${i.qty}`).join(', ');
   const isPending = o.status==='pending';
+  const isOutForDelivery = o.status==='out-for-delivery';
   const typeBadge = getOrderTypeBadge(o.orderType);
   const locationDetail = getOrderLocationDetail(o);
+  const cardStyle = isOutForDelivery ? 'border-color:#e67e22;background:rgba(230,126,34,.09)' : '';
+  const statusBadge = isOutForDelivery
+    ? `<span style="background:#e67e22;color:#fff;font-size:.7rem;padding:.2rem .7rem;border-radius:20px;font-weight:600">OUT FOR DELIVERY</span>`
+    : `<span class="badge-${o.status}">${o.status.toUpperCase()}</span>`;
   return `
-  <div class="order-card">
+  <div class="order-card" style="${cardStyle}">
     <div class="order-header">
       <div>
-        <div class="order-table">${o.orderNumber||''} &nbsp; ${typeBadge} &nbsp;<span class="badge-${o.status}">${o.status.toUpperCase()}</span></div>
+        <div class="order-table">${o.orderNumber||''} &nbsp; ${typeBadge} &nbsp;${statusBadge}</div>
         <div class="order-customer">👤 ${o.customerName} &nbsp;·&nbsp; 📞 ${o.phone||'—'}</div>
       </div>
       <div>
@@ -1020,7 +1025,9 @@ function buildOrderCard(o, showArchiveBtn=true) {
     <div class="order-time">🕐 ${formatTime(o.placedAt)}</div>
     <div class="order-actions">
       ${isPending?`<button class="btn btn-sm" style="background:#27ae60;color:#fff" onclick="setOrderStatus('${o.id}','served')">✓ Served</button>`:''}
-      ${showArchiveBtn?`<button class="btn btn-sm" style="background:#e67e22;color:#fff" onclick="setOrderStatus('${o.id}','archived')">Archive →</button>`:''}
+      ${isPending && o.orderType==='delivery'?`<button class="btn btn-sm" style="background:#e67e22;color:#fff" onclick="setOrderStatus('${o.id}','out-for-delivery')">🛵 Out for Delivery</button>`:''}
+      ${isOutForDelivery?`<button class="btn btn-sm" style="background:#27ae60;color:#fff" onclick="setOrderStatus('${o.id}','served')">✅ Order Delivered</button>`:''}
+      ${showArchiveBtn?`<button class="btn btn-sm" style="background:#555;color:#fff" onclick="setOrderStatus('${o.id}','archived')">Archive →</button>`:''}
     </div>
   </div>`;
 }
@@ -1034,7 +1041,7 @@ function updateActiveCount(orders) {
 
 function renderOrders(orders) {
   const hist = document.getElementById('orders-history');
-  const activeOrders = orders.filter(o => o.status==='pending'||o.status==='served');
+  const activeOrders = orders.filter(o => o.status==='pending'||o.status==='served'||o.status==='out-for-delivery');
   const archived = orders.filter(o => o.status==='archived');
   updateActiveCount(orders);
 
@@ -1127,7 +1134,7 @@ function renderOrders(orders) {
 
 window.setOrderStatus = async function(id, status) {
   await updateDoc(doc(db,'orders',id), { status });
-  showToast(status==='served'?'✓ Marked as Served':status==='archived'?'Moved to History':'Status updated');
+  showToast(status==='served'?'✓ Marked as Served':status==='out-for-delivery'?'🛵 Out for Delivery':status==='archived'?'Moved to History':'Status updated');
 };
 
 function listenOrders() {
