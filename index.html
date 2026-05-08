@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"> 
+<title>CAYVAN Admin</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#0f0f0f;color:#e0e0e0;min-height:100vh}
+#login{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem}
+.lbox{background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:2.5rem;width:100%;max-width:380px;text-align:center}
+.lbox h1{font-size:1.5rem;color:#C9A84C;margin-bottom:.5rem;letter-spacing:.2em}
+.lbox p{font-size:.85rem;color:#666;margin-bottom:2rem}
+input[type=password],input[type=text],input[type=number],textarea,select{width:100%;background:#111;border:1px solid #333;color:#e0e0e0;padding:.75rem 1rem;border-radius:8px;font-size:.9rem;outline:none;transition:border-color .2s}
+input:focus,textarea:focus,select:focus{border-color:#C9A84C}
+textarea{resize:vertical;min-height:80px}
+.btn{background:#C9A84C;color:#000;border:none;padding:.8rem 1.8rem;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;transition:background .2s;letter-spacing:.05em}
+.btn:hover{background:#E8C96A}
+.btn-del{background:#c0392b;color:#fff}
+.btn-del:hover{background:#e74c3c}
+.btn-sm{padding:.5rem 1rem;font-size:.78rem}
+.btn-outline{background:transparent;border:1px solid #C9A84C;color:#C9A84C}
+.btn-outline:hover{background:#C9A84C;color:#000}
+.btn-edit{background:#2c3e50;color:#C9A84C;border:1px solid #C9A84C}
+.btn-edit:hover{background:#C9A84C;color:#000}
+#app{display:none}
+.topbar{background:#1a1a1a;border-bottom:1px solid #333;padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between}
+.topbar h1{font-size:1.1rem;color:#C9A84C;letter-spacing:.2em}
+.tabs{display:flex;gap:.5rem;padding:1.5rem 2rem .5rem;overflow-x:auto}
+.tab{background:#1a1a1a;border:1px solid #333;color:#888;padding:.6rem 1.4rem;border-radius:8px;cursor:pointer;font-size:.82rem;font-weight:500;transition:all .2s;white-space:nowrap}
+.tab.active,.tab:hover{background:#C9A84C;color:#000;border-color:#C9A84C}
+.panel{display:none;padding:1.5rem 2rem}
+.panel.active{display:block}
+.card{background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:1.5rem;margin-bottom:1rem}
+.card h3{font-size:.95rem;color:#C9A84C;margin-bottom:1rem;font-weight:600}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:.9rem}
+.form-row.full{grid-template-columns:1fr}
+label{font-size:.75rem;color:#888;display:block;margin-bottom:.35rem;letter-spacing:.05em;text-transform:uppercase}
+.item-row{background:#111;border:1px solid #222;border-radius:8px;padding:1rem;margin-bottom:.6rem;display:flex;align-items:flex-start;gap:1rem}
+.item-info{flex:1}
+.item-name{font-size:.95rem;font-weight:600;color:#e0e0e0}
+.item-meta{font-size:.75rem;color:#666;margin-top:.2rem}
+.item-desc{font-size:.75rem;color:#555;margin-top:.3rem;font-style:italic;line-height:1.4}
+.ibadge{font-size:.7rem;padding:.2rem .7rem;border-radius:20px;background:#333;color:#C9A84C;font-weight:600}
+.toast{position:fixed;bottom:2rem;right:2rem;background:#C9A84C;color:#000;padding:.8rem 1.5rem;border-radius:8px;font-size:.85rem;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999}
+.toast.show{opacity:1}
+.toggle-wrap{display:flex;align-items:center;gap:.7rem}
+.toggle{width:44px;height:24px;background:#333;border-radius:12px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.toggle.on{background:#C9A84C}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform .2s}
+.toggle.on::after{transform:translateX(20px)}
+.hidden-badge{background:#333;color:#888;font-size:.65rem;padding:.15rem .5rem;border-radius:4px;margin-left:.4rem}
+.visible-badge{background:rgba(201,168,76,.15);color:#C9A84C;font-size:.65rem;padding:.15rem .5rem;border-radius:4px;margin-left:.4rem}
+@media(max-width:600px){.form-row{grid-template-columns:1fr}.panel{padding:1rem 1rem}}
+
+/* ═══════════════════════════════════════
+   ORDER SUBSECTION TABS
+   ═══════════════════════════════════════ */
+.order-subtabs{display:flex;gap:0;border:1px solid #333;border-radius:8px;overflow:hidden;width:fit-content;margin-bottom:1.2rem;}
+.order-subtab{background:#111;border:none;color:#666;padding:.55rem 1.4rem;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .2s;border-right:1px solid #333;letter-spacing:.04em;display:flex;align-items:center;gap:.45rem;}
+.order-subtab:last-child{border-right:none;}
+.order-subtab.active{background:#C9A84C;color:#000;}
+.order-subtab:hover:not(.active){background:#1f1f1f;color:#C9A84C;}
+.order-subtab .subtab-count{background:rgba(0,0,0,.2);color:inherit;font-size:.65rem;padding:.1rem .45rem;border-radius:20px;font-weight:700;}
+.order-subtab.active .subtab-count{background:rgba(0,0,0,.25);}
+
+/* Order type badges */
+.otype-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.7rem;font-weight:700;padding:.25rem .7rem;border-radius:20px;letter-spacing:.06em;text-transform:uppercase;}
+.otype-dinein{background:rgba(201,168,76,.15);color:#C9A84C;border:1px solid rgba(201,168,76,.3);}
+.otype-takeaway{background:rgba(52,152,219,.15);color:#5dade2;border:1px solid rgba(52,152,219,.3);}
+.otype-delivery{background:rgba(231,76,60,.15);color:#e87070;border:1px solid rgba(231,76,60,.3);}
+
+/* Delivery address block */
+.delivery-addr-block{background:#0d0d0d;border:1px solid #222;border-radius:6px;padding:.7rem .9rem;margin:.4rem 0;font-size:.78rem;line-height:1.65;}
+.delivery-addr-block .addr-label{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:#555;font-weight:600;margin-bottom:.25rem;}
+.delivery-addr-block .addr-val{color:#aaa;}
+.delivery-addr-block .addr-val strong{color:#e0e0e0;}
+
+.order-card{background:#111;border:1px solid #222;border-radius:8px;padding:1rem;margin-bottom:.7rem}
+.order-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;flex-wrap:wrap;gap:.5rem}
+.order-table{font-size:1rem;font-weight:700;color:#C9A84C}
+.order-customer{font-size:.8rem;color:#888;margin-top:.1rem}
+.order-items{font-size:.78rem;color:#aaa;margin:.5rem 0;line-height:1.6}
+.order-total{font-size:.85rem;color:#C9A84C;font-weight:600;margin-top:.3rem}
+.order-time{font-size:.7rem;color:#555;margin-top:.2rem}
+.order-actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.7rem}
+.badge-pending{background:#c0392b;color:#fff;font-size:.7rem;padding:.2rem .7rem;border-radius:20px;font-weight:600}
+.badge-served{background:#27ae60;color:#fff;font-size:.7rem;padding:.2rem .7rem;border-radius:20px;font-weight:600}
+.badge-archived{background:#e67e22;color:#fff;font-size:.7rem;padding:.2rem .7rem;border-radius:20px;font-weight:600}
+.hist-row{display:flex;justify-content:space-between;align-items:flex-start;padding:.7rem 0;border-bottom:1px solid #1a1a1a;font-size:.8rem;gap:1rem}
+.hist-row:last-child{border-bottom:none}
+.hist-info{color:#888;line-height:1.5;flex:1;min-width:0}
+.hist-total{color:#C9A84C;font-weight:600;white-space:nowrap}
+.del-confirm-box{background:#1a0a0a;border:1px solid #7f1d1d;border-radius:10px;padding:1.1rem 1.2rem;margin-top:.8rem}
+.del-confirm-box p{font-size:.82rem;color:#f87171;margin-bottom:.9rem;line-height:1.5}
+.del-confirm-box .warn-title{font-size:.88rem;font-weight:700;color:#ef4444;margin-bottom:.4rem}
+.order-del-confirm{background:#200a0a;border:1px solid #7f1d1d;border-radius:8px;padding:.85rem 1rem;margin-top:.6rem;display:none;animation:fadeIn .15s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.order-del-confirm.step2{border-color:#991b1b}
+.order-del-confirm .warn-title{font-size:.8rem;font-weight:700;color:#ef4444;margin-bottom:.35rem}
+.order-del-confirm p{font-size:.76rem;color:#fca5a5;margin-bottom:.65rem;line-height:1.5}
+.order-del-confirm .del-actions{display:flex;gap:.5rem;flex-wrap:wrap}
+.order-del-confirm .del-inp{margin-bottom:.65rem;text-transform:uppercase;letter-spacing:.1em;font-size:.82rem;background:#111;border:1px solid #7f1d1d;color:#e0e0e0;padding:.55rem .8rem;border-radius:6px;width:100%;outline:none}
+.order-del-confirm .del-inp:focus{border-color:#ef4444}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.open{display:flex}
+.modal{background:#1a1a1a;border:1px solid #444;border-radius:14px;padding:2rem;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;position:relative}
+.modal h3{color:#C9A84C;font-size:1rem;margin-bottom:1.2rem;letter-spacing:.05em}
+.modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:#888;font-size:1.3rem;cursor:pointer;line-height:1}
+.modal-close:hover{color:#e0e0e0}
+.current-photo{display:flex;align-items:center;gap:.8rem;margin-bottom:.8rem;padding:.7rem;background:#111;border-radius:8px;border:1px solid #222}
+.current-photo img{width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #C9A84C}
+.current-photo span{font-size:.78rem;color:#888}
+
+/* ── CHANGE PASSWORD STYLES ── */
+.chpw-box{background:#111;border:1px solid #2a2a2a;border-radius:10px;overflow:hidden;transition:all .3s}
+.chpw-trigger{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.2rem;cursor:pointer;user-select:none;transition:background .2s}
+.chpw-trigger:hover{background:#181818}
+.chpw-trigger-left{display:flex;align-items:center;gap:.75rem}
+.chpw-trigger-left .lock-icon{font-size:1.1rem}
+.chpw-trigger-left div{display:flex;flex-direction:column;gap:.15rem}
+.chpw-trigger-left strong{font-size:.88rem;color:#e0e0e0;font-weight:600}
+.chpw-trigger-left span{font-size:.72rem;color:#555}
+.chpw-arrow{font-size:.75rem;color:#555;transition:transform .3s}
+.chpw-arrow.open{transform:rotate(180deg)}
+.chpw-body{display:none;border-top:1px solid #222;animation:fadeIn .2s ease}
+.chpw-body.visible{display:block}
+.chpw-steps{display:flex;gap:0;border-bottom:1px solid #222}
+.chpw-step-tab{flex:1;padding:.7rem;text-align:center;font-size:.72rem;color:#444;font-weight:600;letter-spacing:.08em;text-transform:uppercase;border-bottom:2px solid transparent;transition:all .2s}
+.chpw-step-tab.active{color:#C9A84C;border-bottom-color:#C9A84C}
+.chpw-step-tab.done{color:#27ae60;border-bottom-color:#27ae60}
+.chpw-step{display:none;padding:1.2rem}
+.chpw-step.active{display:block;animation:fadeIn .2s ease}
+.master-key-hint{background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:.9rem 1rem;margin-bottom:1rem;display:flex;gap:.7rem;align-items:flex-start}
+.master-key-hint .hint-icon{font-size:1rem;margin-top:.05rem;flex-shrink:0}
+.master-key-hint p{font-size:.76rem;color:#888;line-height:1.55}
+.master-key-hint strong{color:#C9A84C}
+.chpw-input-wrap{position:relative;margin-bottom:.9rem}
+.chpw-input-wrap input{padding-right:2.8rem}
+.chpw-eye{position:absolute;right:.8rem;top:50%;transform:translateY(-50%);background:none;border:none;color:#555;cursor:pointer;font-size:.95rem;padding:.2rem;line-height:1;transition:color .2s}
+.chpw-eye:hover{color:#C9A84C}
+.chpw-err{font-size:.75rem;color:#e74c3c;margin-top:-.5rem;margin-bottom:.8rem;display:none}
+.chpw-err.show{display:block}
+.pw-strength{height:3px;border-radius:2px;margin-top:.4rem;margin-bottom:.8rem;background:#222;overflow:hidden}
+.pw-strength-bar{height:100%;border-radius:2px;transition:width .3s,background .3s;width:0%}
+.pw-req{display:flex;flex-direction:column;gap:.25rem;margin-bottom:1rem}
+.pw-req-item{font-size:.72rem;color:#555;display:flex;align-items:center;gap:.5rem;transition:color .2s}
+.pw-req-item.met{color:#27ae60}
+.pw-req-item::before{content:'○';font-size:.65rem}
+.pw-req-item.met::before{content:'●'}
+.chpw-success{text-align:center;padding:1.5rem 1.2rem}
+.chpw-success .success-icon{font-size:2.5rem;margin-bottom:.8rem}
+.chpw-success h4{color:#27ae60;font-size:1rem;margin-bottom:.4rem}
+.chpw-success p{font-size:.8rem;color:#666;line-height:1.5}
+
+/* ── SUBSECTION PANELS ── */
+.order-subpanel{display:none;}
+.order-subpanel.active{display:block;}
+.empty-subsection{padding:1.5rem;text-align:center;color:#444;font-size:.85rem;font-style:italic;}
+.empty-subsection .empty-icon{font-size:2rem;margin-bottom:.5rem;opacity:.4;}
+</style>
+</head>
+<body>
+ 
+<div id="login">
+  <div class="lbox">
+    <h1>CAYVAN</h1>
+    <p>Owner Admin Panel</p>
+    <div style="margin-bottom:1rem">
+      <label>Password</label>
+      <input type="password" id="pw" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')login()">
+    </div>
+    <button class="btn" onclick="login()" style="width:100%">Sign In</button>
+    <p id="login-err" style="color:#e74c3c;font-size:.8rem;margin-top:.8rem;display:none">Wrong password. Try again.</p>
+  </div>
+</div>
+ 
+<div id="app">
+  <div class="topbar">
+    <h1>CAYVAN · Admin</h1>
+    <button class="btn btn-outline btn-sm" onclick="signout()">Sign out</button>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="showPanel('menu-panel',this)">🍽 Menu</div>
+    <div class="tab" onclick="showPanel('reviews-panel',this)">⭐ Reviews</div>
+    <div class="tab" onclick="showPanel('orders-panel',this)">🧾 Orders <span id="active-count" style="background:#c0392b;color:#fff;border-radius:20px;padding:.1rem .55rem;font-size:.72rem;margin-left:.4rem;display:none">0</span></div>
+    <div class="tab" onclick="showPanel('settings-panel',this)">⚙️ Settings</div>
+    <div class="tab" onclick="showPanel('feedback-panel',this)">💬 Feedback</div>
+    <div class="tab" onclick="showPanel('customers-panel',this)">👥 Customer Database</div>
+  </div>
+ 
+  <!-- MENU PANEL -->
+  <div class="panel active" id="menu-panel">
+    <div class="card">
+      <h3>Add New Menu Item</h3>
+      <div class="form-row">
+        <div><label>Item name *</label><input type="text" id="mn" placeholder="e.g. Hot Coconut Coffee"></div>
+        <div><label>Price (₹) *</label><input type="number" id="mp" placeholder="149"></div>
+      </div>
+      <div class="form-row full">
+        <div><label>Description *</label><textarea id="md" placeholder="Describe this dish..."></textarea></div>
+      </div>
+      <div class="form-row">
+        <div><label>Category</label>
+          <select id="mcat">
+            <option value="sig bev">Signature + Beverage</option>
+            <option value="sig bite">Signature + Bite</option>
+            <option value="sig">Signature only</option>
+            <option value="bev">Beverage only</option>
+            <option value="bite">Bite only</option>
+          </select>
+        </div>
+        <div><label>Badge text</label><input type="text" id="mbadge" placeholder="e.g. Best Seller"></div>
+      </div>
+      <div class="form-row">
+        <div><label>Badge style</label>
+          <select id="mbtype">
+            <option value="b-best">Gold — Best Seller</option>
+            <option value="b-fresh">Outlined — Fresh Daily</option>
+            <option value="b-cult">Dark — Cult Classic</option>
+            <option value="b-sig">Warm — Signature</option>
+          </select>
+        </div>
+        <div><label>Small label (top-left of card)</label><input type="text" id="mlabel" placeholder="e.g. Our #1"></div>
+      </div>
+      <div class="form-row">
+        <div><label>Prep time (minutes) *</label><input type="number" id="mprep" placeholder="e.g. 10" min="1" max="60"></div>
+        <div style="display:flex;align-items:center;padding-top:1.5rem"><span style="font-size:.78rem;color:#555">Time needed to prepare this item</span></div>
+      </div>
+      <div class="form-row full">
+        <div>
+          <label>Item photo (optional)</label>
+          <input type="file" id="mimg" accept="image/*" style="background:#111;border:1px solid #333;color:#e0e0e0;padding:.6rem 1rem;border-radius:8px;font-size:.85rem;width:100%">
+        </div>
+      </div>
+      <button class="btn" onclick="addMenuItem()">+ Add to Menu</button>
+    </div>
+    <div class="card">
+      <h3>Current Menu Items</h3>
+      <div id="menu-list"><p style="color:#555;font-size:.85rem">Loading...</p></div>
+    </div>
+  </div>
+ 
+  <!-- REVIEWS PANEL -->
+  <div class="panel" id="reviews-panel">
+    <div class="card">
+      <h3>Add New Review</h3>
+      <div class="form-row">
+        <div><label>Customer name *</label><input type="text" id="rn" placeholder="e.g. Priya Sharma"></div>
+        <div><label>Role / title</label><input type="text" id="rr" placeholder="e.g. Local Guide"></div>
+      </div>
+      <div class="form-row">
+        <div><label>Stars (1–5)</label><input type="number" id="rs" min="1" max="5" placeholder="5"></div>
+        <div style="display:flex;align-items:center;gap:.7rem;padding-top:1.5rem">
+          <div class="toggle" id="feat-toggle" onclick="this.classList.toggle('on')"></div>
+          <label style="margin:0;text-transform:none;font-size:.85rem">Featured (large card on site)</label>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div><label>Review text *</label><textarea id="rt2" placeholder="What the customer said..."></textarea></div>
+      </div>
+      <button class="btn" onclick="addReview()">+ Add Review</button>
+    </div>
+    <div class="card">
+      <h3>Current Reviews</h3>
+      <div id="reviews-list"><p style="color:#555;font-size:.85rem">Loading...</p></div>
+    </div>
+  </div>
+ 
+  <!-- ORDERS PANEL -->
+  <div class="panel" id="orders-panel">
+    <!-- ACTIVE ORDERS with subsections -->
+    <div class="card">
+      <h3>Active Orders</h3>
+      <div class="order-subtabs">
+        <button class="order-subtab active" id="subtab-all" onclick="switchOrderSubtab('all')">
+          All <span class="subtab-count" id="count-all">0</span>
+        </button>
+        <button class="order-subtab" id="subtab-dinein" onclick="switchOrderSubtab('dinein')">
+          🍽 Dine In <span class="subtab-count" id="count-dinein">0</span>
+        </button>
+        <button class="order-subtab" id="subtab-takeaway" onclick="switchOrderSubtab('takeaway')">
+          🥡 Takeaway <span class="subtab-count" id="count-takeaway">0</span>
+        </button>
+        <button class="order-subtab" id="subtab-delivery" onclick="switchOrderSubtab('delivery')">
+          🛵 Delivery <span class="subtab-count" id="count-delivery">0</span>
+        </button>
+      </div>
+      <div class="order-subpanel active" id="subpanel-all">
+        <div id="orders-list-all"><p style="color:#555;font-size:.85rem">Loading...</p></div>
+      </div>
+      <div class="order-subpanel" id="subpanel-dinein">
+        <div id="orders-list-dinein"></div>
+      </div>
+      <div class="order-subpanel" id="subpanel-takeaway">
+        <div id="orders-list-takeaway"></div>
+      </div>
+      <div class="order-subpanel" id="subpanel-delivery">
+        <div id="orders-list-delivery"></div>
+      </div>
+    </div>
+
+    <!-- ORDER HISTORY -->
+    <div class="card" style="margin-top:1.5rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem;margin-bottom:1rem">
+        <h3 style="margin-bottom:0">Order History</h3>
+        <button class="btn btn-sm" style="background:#3a1a1a;color:#e87070;border:1px solid #7f1d1d;font-size:.75rem" onclick="showDelStep1()">🗑 Delete All History</button>
+      </div>
+      <div id="del-step1" class="del-confirm-box" style="display:none">
+        <div class="warn-title">⚠️ Delete all order history?</div>
+        <p>This will permanently delete every archived order. Revenue totals will be lost. This cannot be undone.</p>
+        <div style="display:flex;gap:.7rem;flex-wrap:wrap">
+          <button class="btn btn-del btn-sm" onclick="showDelStep2()">Yes, I want to delete</button>
+          <button class="btn btn-outline btn-sm" onclick="cancelDel()">Cancel</button>
+        </div>
+      </div>
+      <div id="del-step2" class="del-confirm-box" style="display:none;border-color:#991b1b;background:#200a0a">
+        <div class="warn-title" style="color:#f87171;font-size:.92rem">🚨 Final confirmation — are you absolutely sure?</div>
+        <p style="color:#fca5a5">All archived order records will be <strong style="color:#ef4444">permanently deleted</strong> and cannot be recovered. Type <strong style="color:#ef4444">DELETE</strong> below to confirm.</p>
+        <input type="text" id="del-confirm-input" placeholder="Type DELETE to confirm" style="background:#111;border:1px solid #7f1d1d;color:#e0e0e0;margin-bottom:.8rem;text-transform:uppercase;letter-spacing:.1em">
+        <div style="display:flex;gap:.7rem;flex-wrap:wrap">
+          <button class="btn btn-del btn-sm" onclick="confirmDeleteHistory()">🗑 Delete Permanently</button>
+          <button class="btn btn-outline btn-sm" onclick="cancelDel()">Cancel</button>
+        </div>
+      </div>
+      <div id="orders-history"><p style="color:#555;font-size:.85rem">No archived orders yet.</p></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS PANEL -->
+  <div class="panel" id="settings-panel">
+    <div class="card">
+      <h3>Café Open / Closed Status</h3>
+      <div class="toggle-wrap">
+        <div class="toggle on" id="open-toggle" onclick="toggleOpen()"></div>
+        <span id="open-label" style="font-size:.95rem">Currently Open</span>
+      </div>
+      <p style="font-size:.75rem;color:#555;margin-top:.8rem">This updates the green dot on the customer website instantly.</p>
+    </div>
+    <div class="card">
+      <h3>Opening Hours</h3>
+      <div class="form-row">
+        <div><label>Monday – Friday</label><input type="text" id="h-mf" placeholder="9:00 AM – 10:00 PM"></div>
+        <div><label>Saturday</label><input type="text" id="h-sat" placeholder="9:00 AM – 11:00 PM"></div>
+      </div>
+      <div class="form-row">
+        <div><label>Sunday</label><input type="text" id="h-sun" placeholder="10:00 AM – 9:00 PM"></div>
+      </div>
+      <button class="btn" onclick="saveSettings()">Save Hours</button>
+    </div>
+
+    <div class="card">
+      <h3>Story Section Image</h3>
+      <p style="font-size:.78rem;color:#555;margin-bottom:1rem">This is the background image shown on the "Our Story" section of the customer website.</p>
+      <div id="story-img-preview" style="display:none;margin-bottom:1rem">
+        <img id="story-img-thumb" src="" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;border:1px solid #333;">
+        <p style="font-size:.72rem;color:#555;margin-top:.4rem">Current story image</p>
+      </div>
+      <div class="form-row full">
+        <div>
+          <label>Upload New Story Image</label>
+          <input type="file" id="story-img-file" accept="image/*" style="background:#111;border:1px solid #333;color:#e0e0e0;padding:.6rem 1rem;border-radius:8px;font-size:.85rem;width:100%">
+        </div>
+      </div>
+      <button class="btn" onclick="saveStoryImage()">Upload & Save Image</button>
+    </div>
+
+    <div class="card">
+      <h3>Announcement Banner</h3>
+      <div class="form-row full">
+        <div>
+          <label>Message (leave blank to hide)</label>
+          <input type="text" id="announce" placeholder="e.g. Closed on Monday for Pongal — back Tuesday!">
+        </div>
+      </div>
+      <button class="btn" onclick="saveSettings()">Save Announcement</button>
+    </div>
+
+    <!-- CHANGE PASSWORD -->
+    <div class="card">
+      <h3>🔐 Security</h3>
+      <p style="font-size:.78rem;color:#555;margin-bottom:1.1rem">Change the admin login password. Requires your master key to proceed.</p>
+      <div class="chpw-box" id="chpw-box">
+        <div class="chpw-trigger" onclick="toggleChpw()">
+          <div class="chpw-trigger-left">
+            <span class="lock-icon">🔑</span>
+            <div>
+              <strong>Change Password</strong>
+              <span>Verify master key → set new password</span>
+            </div>
+          </div>
+          <span class="chpw-arrow" id="chpw-arrow">▼</span>
+        </div>
+        <div class="chpw-body" id="chpw-body">
+          <div class="chpw-steps">
+            <div class="chpw-step-tab active" id="stab-1">1 · Master Key</div>
+            <div class="chpw-step-tab" id="stab-2">2 · New Password</div>
+            <div class="chpw-step-tab" id="stab-3">3 · Done</div>
+          </div>
+          <div class="chpw-step active" id="chpw-step1">
+            <div class="master-key-hint">
+              <span class="hint-icon">🛡️</span>
+              <p>Enter the <strong>Master Key</strong> known only to the café owner. This is a one-time verification to authorise the password change.</p>
+            </div>
+            <label>Master Key</label>
+            <div class="chpw-input-wrap">
+              <input type="password" id="master-key-input" placeholder="Enter master key" onkeydown="if(event.key==='Enter')verifyMasterKey()">
+              <button class="chpw-eye" onclick="toggleEye('master-key-input',this)" tabindex="-1">👁</button>
+            </div>
+            <p class="chpw-err" id="master-key-err">Incorrect master key. Please try again.</p>
+            <div style="display:flex;gap:.7rem;flex-wrap:wrap">
+              <button class="btn btn-sm" onclick="verifyMasterKey()">Verify Key →</button>
+              <button class="btn btn-outline btn-sm" onclick="closeChpw()">Cancel</button>
+            </div>
+          </div>
+          <div class="chpw-step" id="chpw-step2">
+            <label>New Password</label>
+            <div class="chpw-input-wrap" style="margin-bottom:.4rem">
+              <input type="password" id="new-pw-input" placeholder="Enter new password" oninput="checkPwStrength()" onkeydown="if(event.key==='Enter')document.getElementById('confirm-pw-input').focus()">
+              <button class="chpw-eye" onclick="toggleEye('new-pw-input',this)" tabindex="-1">👁</button>
+            </div>
+            <div class="pw-strength"><div class="pw-strength-bar" id="pw-strength-bar"></div></div>
+            <div class="pw-req">
+              <div class="pw-req-item" id="req-len">At least 6 characters</div>
+              <div class="pw-req-item" id="req-letter">Contains a letter</div>
+              <div class="pw-req-item" id="req-num">Contains a number or symbol</div>
+            </div>
+            <label>Confirm New Password</label>
+            <div class="chpw-input-wrap">
+              <input type="password" id="confirm-pw-input" placeholder="Repeat new password" onkeydown="if(event.key==='Enter')saveNewPassword()">
+              <button class="chpw-eye" onclick="toggleEye('confirm-pw-input',this)" tabindex="-1">👁</button>
+            </div>
+            <p class="chpw-err" id="new-pw-err">—</p>
+            <div style="display:flex;gap:.7rem;flex-wrap:wrap">
+              <button class="btn btn-sm" onclick="saveNewPassword()">💾 Save New Password</button>
+              <button class="btn btn-outline btn-sm" onclick="closeChpw()">Cancel</button>
+            </div>
+          </div>
+          <div class="chpw-step" id="chpw-step3">
+            <div class="chpw-success">
+              <div class="success-icon">✅</div>
+              <h4>Password Changed!</h4>
+              <p>Your new admin password has been saved. You'll use it the next time you sign in.</p>
+              <button class="btn btn-sm" style="margin-top:1rem" onclick="closeChpw()">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOMER DATABASE PANEL -->
+  <div class="panel" id="customers-panel">
+    <div class="card">
+      <h3>Customer Database</h3>
+      <p style="font-size:.78rem;color:#555;margin-bottom:1rem">Every customer who places an order with their phone number appears here automatically.</p>
+      <div id="customers-list"><p style="color:#555;font-size:.85rem">Loading...</p></div>
+    </div>
+  </div>
+
+  <!-- FEEDBACK PANEL -->
+  <div class="panel" id="feedback-panel">
+    <div class="card">
+      <h3>Active Feedback</h3>
+      <div id="feedback-list"><p style="color:#555;font-size:.85rem">Loading...</p></div>
+    </div>
+    <div class="card" style="margin-top:1rem">
+      <h3>Archived Feedback</h3>
+      <div id="feedback-archive"><p style="color:#555;font-size:.85rem">No archived feedback yet.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MENU ITEM MODAL -->
+<div class="modal-overlay" id="edit-menu-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeMenuModal()">✕</button>
+    <h3>✏️ Edit Menu Item</h3>
+    <input type="hidden" id="edit-menu-id">
+    <div class="form-row">
+      <div><label>Item name *</label><input type="text" id="edit-mn" placeholder="e.g. Hot Coconut Coffee"></div>
+      <div><label>Price (₹) *</label><input type="number" id="edit-mp" placeholder="149"></div>
+    </div>
+    <div class="form-row full">
+      <div><label>Description *</label><textarea id="edit-md" placeholder="Describe this dish..."></textarea></div>
+    </div>
+    <div class="form-row">
+      <div><label>Category</label>
+        <select id="edit-mcat">
+          <option value="sig bev">Signature + Beverage</option>
+          <option value="sig bite">Signature + Bite</option>
+          <option value="sig">Signature only</option>
+          <option value="bev">Beverage only</option>
+          <option value="bite">Bite only</option>
+        </select>
+      </div>
+      <div><label>Badge text</label><input type="text" id="edit-mbadge" placeholder="e.g. Best Seller"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Prep time (minutes) *</label><input type="number" id="edit-mprep" placeholder="e.g. 10" min="1" max="60"></div>
+      <div></div>
+    </div>
+    <div class="form-row">
+      <div><label>Badge style</label>
+        <select id="edit-mbtype">
+          <option value="b-best">Gold — Best Seller</option>
+          <option value="b-fresh">Outlined — Fresh Daily</option>
+          <option value="b-cult">Dark — Cult Classic</option>
+          <option value="b-sig">Warm — Signature</option>
+        </select>
+      </div>
+      <div><label>Small label (top-left of card)</label><input type="text" id="edit-mlabel" placeholder="e.g. Our #1"></div>
+    </div>
+    <div class="form-row full" style="margin-bottom:.9rem">
+      <div>
+        <label>Current Photo</label>
+        <div class="current-photo" id="edit-current-photo" style="display:none">
+          <img id="edit-current-img" src="" alt="current">
+          <span>Current photo — upload a new one below to replace it</span>
+        </div>
+        <div id="edit-no-photo" style="font-size:.78rem;color:#555;padding:.5rem 0">No photo uploaded yet.</div>
+        <label style="margin-top:.7rem">Replace photo (optional)</label>
+        <input type="file" id="edit-mimg" accept="image/*" style="background:#111;border:1px solid #333;color:#e0e0e0;padding:.6rem 1rem;border-radius:8px;font-size:.85rem;width:100%">
+      </div>
+    </div>
+    <div style="display:flex;gap:.7rem;flex-wrap:wrap">
+      <button class="btn" onclick="saveMenuEdit()">💾 Save Changes</button>
+      <button class="btn btn-outline" onclick="closeMenuModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT REVIEW MODAL -->
+<div class="modal-overlay" id="edit-review-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeReviewModal()">✕</button>
+    <h3>✏️ Edit Review</h3>
+    <input type="hidden" id="edit-review-id">
+    <div class="form-row">
+      <div><label>Customer name *</label><input type="text" id="edit-rn" placeholder="e.g. Priya Sharma"></div>
+      <div><label>Role / title</label><input type="text" id="edit-rr" placeholder="e.g. Local Guide"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Stars (1–5)</label><input type="number" id="edit-rs" min="1" max="5" placeholder="5"></div>
+      <div style="display:flex;align-items:center;gap:.7rem;padding-top:1.5rem">
+        <div class="toggle" id="edit-feat-toggle" onclick="this.classList.toggle('on')"></div>
+        <label style="margin:0;text-transform:none;font-size:.85rem">Featured (large card)</label>
+      </div>
+    </div>
+    <div class="form-row full">
+      <div><label>Review text *</label><textarea id="edit-rt" placeholder="What the customer said..."></textarea></div>
+    </div>
+    <div style="display:flex;gap:.7rem;flex-wrap:wrap">
+      <button class="btn" onclick="saveReviewEdit()">💾 Save Changes</button>
+      <button class="btn btn-outline" onclick="closeReviewModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+ 
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, getDoc, setDoc, updateDoc, onSnapshot, query, orderBy, where, writeBatch }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAwFloYi3oQ3zEGktOyDtTtlPBf_aOCf3E",
+  authDomain: "cayvan-188ef.firebaseapp.com",
+  projectId: "cayvan-188ef",
+  storageBucket: "cayvan-188ef.firebasestorage.app",
+  messagingSenderId: "716535633334",
+  appId: "1:716535633334:web:f82ebc69545dce6cb55d17"
+};
+
+const CLOUD_NAME = 'drjdb2wmx';
+const UPLOAD_PRESET = 'CAYVAN';
+const MASTER_KEY = "CAYVAN-MASTER-2025";
+
+let ADMIN_PASS = "cayvan2025";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+async function loadAdminPassword() {
+  try {
+    const d = await getDoc(doc(db, 'settings', 'security'));
+    if (d.exists() && d.data().adminPassword) {
+      ADMIN_PASS = d.data().adminPassword;
+    }
+  } catch(e) { /* use default */ }
+}
+loadAdminPassword();
+
+// ── LOGIN ──
+window.login = function() {
+  if (document.getElementById('pw').value === ADMIN_PASS) {
+    document.getElementById('login').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadMenu(); loadReviews(); loadSettings(); listenOrders(); loadCustomers(); loadFeedback();
+  } else {
+    document.getElementById('login-err').style.display = 'block';
+  }
+};
+
+window.signout = function() {
+  document.getElementById('login').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('pw').value = '';
+};
+
+window.showPanel = function(id, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+};
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+async function uploadToCloudinary(file) {
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', UPLOAD_PRESET);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method:'POST', body:fd });
+  const data = await res.json();
+  if (!data.secure_url) throw new Error('Upload failed');
+  return data.secure_url;
+}
+
+// ── ORDER SUBTABS ──────────────────────────────────────
+window.switchOrderSubtab = function(tab) {
+  document.querySelectorAll('.order-subtab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.order-subpanel').forEach(p => p.classList.remove('active'));
+  document.getElementById('subtab-' + tab).classList.add('active');
+  document.getElementById('subpanel-' + tab).classList.add('active');
+};
+
+// ── CHANGE PASSWORD LOGIC ──
+window.toggleChpw = function() {
+  const body = document.getElementById('chpw-body');
+  const arrow = document.getElementById('chpw-arrow');
+  const isOpen = body.classList.contains('visible');
+  if (isOpen) { closeChpw(); }
+  else { body.classList.add('visible'); arrow.classList.add('open'); resetChpwToStep1(); }
+};
+window.closeChpw = function() {
+  document.getElementById('chpw-body').classList.remove('visible');
+  document.getElementById('chpw-arrow').classList.remove('open');
+  setTimeout(resetChpwToStep1, 300);
+};
+function resetChpwToStep1() {
+  document.getElementById('master-key-input').value = '';
+  document.getElementById('new-pw-input').value = '';
+  document.getElementById('confirm-pw-input').value = '';
+  document.getElementById('master-key-err').classList.remove('show');
+  document.getElementById('new-pw-err').classList.remove('show');
+  goToChpwStep(1);
+}
+function goToChpwStep(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById('chpw-step'+i).classList.toggle('active', i===n);
+    const tab = document.getElementById('stab-'+i);
+    tab.classList.remove('active','done');
+    if (i < n) tab.classList.add('done');
+    if (i === n) tab.classList.add('active');
+  });
+}
+window.toggleEye = function(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+  else { inp.type = 'password'; btn.textContent = '👁'; }
+};
+window.verifyMasterKey = function() {
+  const val = document.getElementById('master-key-input').value;
+  const errEl = document.getElementById('master-key-err');
+  if (val === MASTER_KEY) {
+    errEl.classList.remove('show');
+    goToChpwStep(2);
+    setTimeout(() => document.getElementById('new-pw-input').focus(), 100);
+  } else {
+    errEl.classList.add('show');
+    document.getElementById('master-key-input').value = '';
+    document.getElementById('master-key-input').focus();
+  }
+};
+window.checkPwStrength = function() {
+  const val = document.getElementById('new-pw-input').value;
+  const hasLen = val.length >= 6;
+  const hasLetter = /[a-zA-Z]/.test(val);
+  const hasNum = /[0-9!@#$%^&*()_\-+=\[\]{}|;:,.<>?]/.test(val);
+  document.getElementById('req-len').classList.toggle('met', hasLen);
+  document.getElementById('req-letter').classList.toggle('met', hasLetter);
+  document.getElementById('req-num').classList.toggle('met', hasNum);
+  const score = [hasLen, hasLetter, hasNum].filter(Boolean).length;
+  const bar = document.getElementById('pw-strength-bar');
+  const colors = ['#e74c3c','#e67e22','#27ae60'];
+  bar.style.width = (score * 33.3) + '%';
+  bar.style.background = colors[score-1] || '#e74c3c';
+};
+window.saveNewPassword = async function() {
+  const newPw = document.getElementById('new-pw-input').value;
+  const confirmPw = document.getElementById('confirm-pw-input').value;
+  const errEl = document.getElementById('new-pw-err');
+  if (newPw.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; errEl.classList.add('show'); return; }
+  if (newPw !== confirmPw) { errEl.textContent = 'Passwords do not match. Please try again.'; errEl.classList.add('show'); document.getElementById('confirm-pw-input').value = ''; document.getElementById('confirm-pw-input').focus(); return; }
+  errEl.classList.remove('show');
+  try {
+    await setDoc(doc(db,'settings','security'), { adminPassword: newPw }, { merge: true });
+    ADMIN_PASS = newPw;
+    goToChpwStep(3);
+    showToast('✓ Admin password updated!');
+  } catch(e) { errEl.textContent = 'Failed to save. Check your connection and try again.'; errEl.classList.add('show'); console.error(e); }
+};
+
+// ── BULK DELETE ──
+window.showDelStep1 = function() { document.getElementById('del-step1').style.display = 'block'; document.getElementById('del-step2').style.display = 'none'; document.getElementById('del-confirm-input').value = ''; };
+window.showDelStep2 = function() { document.getElementById('del-step1').style.display = 'none'; document.getElementById('del-step2').style.display = 'block'; setTimeout(() => document.getElementById('del-confirm-input').focus(), 100); };
+window.cancelDel = function() { document.getElementById('del-step1').style.display = 'none'; document.getElementById('del-step2').style.display = 'none'; document.getElementById('del-confirm-input').value = ''; };
+window.confirmDeleteHistory = async function() {
+  if (document.getElementById('del-confirm-input').value.trim().toUpperCase() !== 'DELETE') { showToast('⚠ Type DELETE to confirm'); return; }
+  try {
+    const snap = await getDocs(query(collection(db,'orders'), where('status','==','archived')));
+    if (snap.empty) { showToast('No archived orders to delete.'); cancelDel(); return; }
+    const batch = writeBatch(db);
+    snap.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+    cancelDel();
+    showToast(`✓ ${snap.size} order${snap.size!==1?'s':''} deleted from history`);
+  } catch(e) { showToast('⚠ Delete failed. Try again.'); console.error(e); }
+};
+
+// ── PER-ORDER DELETE ──
+window.startOrderDelete = function(id) {
+  document.querySelectorAll('.order-del-confirm').forEach(el => { el.style.display = 'none'; el.innerHTML = ''; });
+  const el = document.getElementById('del-confirm-' + id);
+  if (!el) return;
+  el.className = 'order-del-confirm';
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div class="warn-title">⚠️ Delete this order?</div>
+    <p>This will permanently remove this order from history. This cannot be undone.</p>
+    <div class="del-actions">
+      <button class="btn btn-del btn-sm" onclick="orderDelStep2('${id}')">Yes, delete it</button>
+      <button class="btn btn-outline btn-sm" onclick="cancelOrderDel('${id}')">Cancel</button>
+    </div>`;
+};
+window.orderDelStep2 = function(id) {
+  const el = document.getElementById('del-confirm-' + id);
+  if (!el) return;
+  el.className = 'order-del-confirm step2';
+  el.innerHTML = `
+    <div class="warn-title" style="color:#f87171">🚨 Final confirmation</div>
+    <p>Type <strong style="color:#ef4444">DELETE</strong> below to permanently remove this order record.</p>
+    <input class="del-inp" type="text" id="odel-inp-${id}" placeholder="Type DELETE to confirm"
+      onkeydown="if(event.key==='Enter')finalOrderDel('${id}')">
+    <div class="del-actions">
+      <button class="btn btn-del btn-sm" onclick="finalOrderDel('${id}')">🗑 Delete Permanently</button>
+      <button class="btn btn-outline btn-sm" onclick="cancelOrderDel('${id}')">Cancel</button>
+    </div>`;
+  setTimeout(() => { const i = document.getElementById('odel-inp-' + id); if(i) i.focus(); }, 80);
+};
+window.finalOrderDel = async function(id) {
+  const inp = document.getElementById('odel-inp-' + id);
+  if (!inp || inp.value.trim().toUpperCase() !== 'DELETE') { showToast('⚠ Type DELETE to confirm'); return; }
+  try { await deleteDoc(doc(db, 'orders', id)); showToast('✓ Order deleted from history'); }
+  catch(e) { showToast('⚠ Delete failed. Try again.'); console.error(e); }
+};
+window.cancelOrderDel = function(id) {
+  const el = document.getElementById('del-confirm-' + id);
+  if (el) { el.style.display = 'none'; el.innerHTML = ''; }
+};
+
+// ── MENU ──
+async function loadMenu() {
+  const snap = await getDocs(collection(db, 'menu'));
+  const el = document.getElementById('menu-list');
+  if (snap.empty) { el.innerHTML = '<p style="color:#555;font-size:.85rem">No items yet.</p>'; return; }
+  el.innerHTML = '';
+  snap.forEach(d => {
+    const item = d.data();
+    const statusBadge = item.active ? '<span class="visible-badge">Visible</span>' : '<span class="hidden-badge">Hidden</span>';
+    const thumb = item.imageUrl
+      ? `<img src="${item.imageUrl}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #C9A84C;flex-shrink:0;">`
+      : `<div style="width:48px;height:48px;border-radius:50%;background:#222;border:2px solid #333;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🍽</div>`;
+    el.innerHTML += `
+    <div class="item-row">
+      ${thumb}
+      <div class="item-info">
+        <div class="item-name">${item.name} ${statusBadge}</div>
+        <div class="item-meta">₹${item.price} · <span class="ibadge">${item.badge}</span> · ${item.category} · ⏱ ${item.prepTime||'?'} min</div>
+        <div class="item-desc">${item.description.substring(0,90)}${item.description.length>90?'...':''}</div>
+      </div>
+      <div style="display:flex;gap:.5rem;flex-direction:column;flex-shrink:0">
+        <button class="btn btn-edit btn-sm" onclick="openMenuEdit('${d.id}')">✏️ Edit</button>
+        <button class="btn btn-sm" onclick="toggleActive('${d.id}',${item.active})">${item.active?'Hide':'Show'}</button>
+        <button class="btn btn-del btn-sm" onclick="deleteMenuItem('${d.id}')">Delete</button>
+      </div>
+    </div>`;
+  });
+}
+
+window.addMenuItem = async function() {
+  const name = document.getElementById('mn').value.trim();
+  const price = parseInt(document.getElementById('mp').value);
+  const desc = document.getElementById('md').value.trim();
+  const prepTime = parseInt(document.getElementById('mprep').value) || 10;
+  if (!name || !price || !desc) { showToast('⚠ Please fill in name, price and description'); return; }
+  let imageUrl = '';
+  const imgFile = document.getElementById('mimg').files[0];
+  if (imgFile) {
+    showToast('Uploading photo...');
+    try { imageUrl = await uploadToCloudinary(imgFile); }
+    catch(e) { showToast('⚠ Photo upload failed.'); return; }
+  }
+  await addDoc(collection(db,'menu'), {
+    name, price, description: desc, prepTime,
+    category: document.getElementById('mcat').value,
+    badge: document.getElementById('mbadge').value.trim() || 'New',
+    badgeType: document.getElementById('mbtype').value,
+    label: document.getElementById('mlabel').value.trim() || 'New item',
+    imageUrl, active: true
+  });
+  ['mn','mp','md','mbadge','mlabel','mprep'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('mimg').value = '';
+  showToast('✓ Menu item added!'); loadMenu();
+};
+
+window.openMenuEdit = async function(id) {
+  const snap = await getDoc(doc(db,'menu',id));
+  if (!snap.exists()) { showToast('Item not found'); return; }
+  const item = snap.data();
+  document.getElementById('edit-menu-id').value = id;
+  document.getElementById('edit-mn').value = item.name || '';
+  document.getElementById('edit-mp').value = item.price || '';
+  document.getElementById('edit-md').value = item.description || '';
+  document.getElementById('edit-mbadge').value = item.badge || '';
+  document.getElementById('edit-mlabel').value = item.label || '';
+  document.getElementById('edit-mprep').value = item.prepTime || '';
+  ['edit-mcat','edit-mbtype'].forEach(sid => {
+    const sel = document.getElementById(sid);
+    const field = sid==='edit-mcat' ? 'category' : 'badgeType';
+    for (let opt of sel.options) if (opt.value === item[field]) { opt.selected = true; break; }
+  });
+  const photoDiv = document.getElementById('edit-current-photo');
+  const noPhotoDiv = document.getElementById('edit-no-photo');
+  if (item.imageUrl) {
+    document.getElementById('edit-current-img').src = item.imageUrl;
+    photoDiv.style.display = 'flex'; noPhotoDiv.style.display = 'none';
+  } else {
+    photoDiv.style.display = 'none'; noPhotoDiv.style.display = 'block';
+  }
+  document.getElementById('edit-mimg').value = '';
+  document.getElementById('edit-menu-modal').classList.add('open');
+};
+window.closeMenuModal = function() { document.getElementById('edit-menu-modal').classList.remove('open'); };
+window.saveMenuEdit = async function() {
+  const id = document.getElementById('edit-menu-id').value;
+  const name = document.getElementById('edit-mn').value.trim();
+  const price = parseInt(document.getElementById('edit-mp').value);
+  const desc = document.getElementById('edit-md').value.trim();
+  const prepTime = parseInt(document.getElementById('edit-mprep').value) || 10;
+  if (!name || !price || !desc) { showToast('⚠ Name, price and description are required'); return; }
+  showToast('Saving...');
+  let imageUrl = undefined;
+  const imgFile = document.getElementById('edit-mimg').files[0];
+  if (imgFile) {
+    showToast('Uploading new photo...');
+    try { imageUrl = await uploadToCloudinary(imgFile); }
+    catch(e) { showToast('⚠ Photo upload failed'); return; }
+  }
+  const updates = {
+    name, price, description: desc, prepTime,
+    category: document.getElementById('edit-mcat').value,
+    badge: document.getElementById('edit-mbadge').value.trim() || 'New',
+    badgeType: document.getElementById('edit-mbtype').value,
+    label: document.getElementById('edit-mlabel').value.trim() || 'New item',
+  };
+  if (imageUrl !== undefined) updates.imageUrl = imageUrl;
+  await updateDoc(doc(db,'menu',id), updates);
+  showToast('✓ Menu item updated!'); closeMenuModal(); loadMenu();
+};
+window.toggleActive = async function(id, current) {
+  await updateDoc(doc(db,'menu',id), { active: !current });
+  showToast(current ? 'Item hidden' : 'Item visible'); loadMenu();
+};
+window.deleteMenuItem = async function(id) {
+  if (!confirm('Delete this item?')) return;
+  await deleteDoc(doc(db,'menu',id));
+  showToast('Item deleted'); loadMenu();
+};
+
+// ── REVIEWS ──
+async function loadReviews() {
+  const snap = await getDocs(collection(db,'reviews'));
+  const el = document.getElementById('reviews-list');
+  if (snap.empty) { el.innerHTML = '<p style="color:#555;font-size:.85rem">No reviews yet.</p>'; return; }
+  el.innerHTML = '';
+  snap.forEach(d => {
+    const r = d.data();
+    el.innerHTML += `
+    <div class="item-row">
+      <div class="item-info">
+        <div class="item-name">${r.name} ${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</div>
+        <div class="item-meta">${r.featured?'⭐ Featured · ':''}${r.role||'Customer'}</div>
+        <div class="item-desc">"${r.text.substring(0,100)}${r.text.length>100?'...':''}"</div>
+      </div>
+      <div style="display:flex;gap:.5rem;flex-direction:column;flex-shrink:0">
+        <button class="btn btn-edit btn-sm" onclick="openReviewEdit('${d.id}')">✏️ Edit</button>
+        <button class="btn btn-del btn-sm" onclick="deleteReview('${d.id}')">Delete</button>
+      </div>
+    </div>`;
+  });
+}
+window.addReview = async function() {
+  const name = document.getElementById('rn').value.trim();
+  const text = document.getElementById('rt2').value.trim();
+  const stars = parseInt(document.getElementById('rs').value) || 5;
+  if (!name || !text) { showToast('⚠ Please fill in name and review text'); return; }
+  await addDoc(collection(db,'reviews'), {
+    name, text, stars,
+    role: document.getElementById('rr').value.trim() || 'Customer',
+    featured: document.getElementById('feat-toggle').classList.contains('on')
+  });
+  ['rn','rr','rs','rt2'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('feat-toggle').classList.remove('on');
+  showToast('✓ Review added!'); loadReviews();
+};
+window.openReviewEdit = async function(id) {
+  const snap = await getDoc(doc(db,'reviews',id));
+  if (!snap.exists()) { showToast('Review not found'); return; }
+  const r = snap.data();
+  document.getElementById('edit-review-id').value = id;
+  document.getElementById('edit-rn').value = r.name || '';
+  document.getElementById('edit-rr').value = r.role || '';
+  document.getElementById('edit-rs').value = r.stars || 5;
+  document.getElementById('edit-rt').value = r.text || '';
+  const ft = document.getElementById('edit-feat-toggle');
+  r.featured ? ft.classList.add('on') : ft.classList.remove('on');
+  document.getElementById('edit-review-modal').classList.add('open');
+};
+window.closeReviewModal = function() { document.getElementById('edit-review-modal').classList.remove('open'); };
+window.saveReviewEdit = async function() {
+  const id = document.getElementById('edit-review-id').value;
+  const name = document.getElementById('edit-rn').value.trim();
+  const text = document.getElementById('edit-rt').value.trim();
+  if (!name || !text) { showToast('⚠ Name and review text are required'); return; }
+  await updateDoc(doc(db,'reviews',id), {
+    name, text,
+    stars: parseInt(document.getElementById('edit-rs').value) || 5,
+    role: document.getElementById('edit-rr').value.trim() || 'Customer',
+    featured: document.getElementById('edit-feat-toggle').classList.contains('on')
+  });
+  showToast('✓ Review updated!'); closeReviewModal(); loadReviews();
+};
+window.deleteReview = async function(id) {
+  if (!confirm('Delete this review?')) return;
+  await deleteDoc(doc(db,'reviews',id));
+  showToast('Review deleted'); loadReviews();
+};
+
+// ── ORDERS ──
+function formatTime(ts) {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})+' · '+d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+}
+
+function getOrderTypeBadge(orderType) {
+  const types = {
+    'dine-in': '<span class="otype-badge otype-dinein">🍽 Dine In</span>',
+    'takeaway': '<span class="otype-badge otype-takeaway">🥡 Takeaway</span>',
+    'delivery': '<span class="otype-badge otype-delivery">🛵 Delivery</span>',
+  };
+  return types[orderType] || '<span class="otype-badge otype-dinein">🍽 Dine In</span>';
+}
+
+function getOrderLocationDetail(o) {
+  if (o.orderType === 'delivery' && o.deliveryAddress) {
+    const addr = o.deliveryAddress;
+    return `<div class="delivery-addr-block">
+      <div class="addr-label">📍 Delivery Address</div>
+      <div class="addr-val"><strong>Street:</strong> ${addr.street || '—'}</div>
+      ${addr.building ? `<div class="addr-val"><strong>Building:</strong> ${addr.building}</div>` : ''}
+      <div class="addr-val"><strong>Landmark:</strong> ${addr.landmark || '—'}</div>
+    </div>`;
+  } else if (o.orderType === 'takeaway') {
+    return `<div style="font-size:.76rem;color:#5dade2;margin:.3rem 0;">🥡 Customer will collect at counter</div>`;
+  } else if (o.table) {
+    return `<div style="font-size:.76rem;color:#C9A84C;margin:.3rem 0;">🪑 ${o.table}</div>`;
+  }
+  return '';
+}
+
+function buildOrderCard(o, showArchiveBtn=true) {
+  const itemsStr = o.items.map(i=>`${i.name} × ${i.qty}`).join(', ');
+  const isPending = o.status==='pending';
+  const typeBadge = getOrderTypeBadge(o.orderType);
+  const locationDetail = getOrderLocationDetail(o);
+  return `
+  <div class="order-card">
+    <div class="order-header">
+      <div>
+        <div class="order-table">${o.orderNumber||''} &nbsp; ${typeBadge} &nbsp;<span class="badge-${o.status}">${o.status.toUpperCase()}</span></div>
+        <div class="order-customer">👤 ${o.customerName} &nbsp;·&nbsp; 📞 ${o.phone||'—'}</div>
+      </div>
+      <div>
+        <div class="order-total">₹${o.total}</div>
+        <div style="font-size:.72rem;color:#C9A84C;margin-top:.2rem">⏱ Ready in ~${o.prepTime||'?'} min</div>
+      </div>
+    </div>
+    ${locationDetail}
+    ${o.customization?`<div style="font-size:.76rem;color:#888;margin:.3rem 0;font-style:italic">📝 "${o.customization}"</div>`:''}
+    <div class="order-items">${itemsStr}</div>
+    <div class="order-time">🕐 ${formatTime(o.placedAt)}</div>
+    <div class="order-actions">
+      ${isPending?`<button class="btn btn-sm" style="background:#27ae60;color:#fff" onclick="setOrderStatus('${o.id}','served')">✓ Served</button>`:''}
+      ${showArchiveBtn?`<button class="btn btn-sm" style="background:#e67e22;color:#fff" onclick="setOrderStatus('${o.id}','archived')">Archive →</button>`:''}
+    </div>
+  </div>`;
+}
+
+function updateActiveCount(orders) {
+  const active = orders.filter(o => o.status==='pending').length;
+  const badge = document.getElementById('active-count');
+  badge.textContent = active;
+  badge.style.display = active > 0 ? 'inline' : 'none';
+}
+
+function renderOrders(orders) {
+  const hist = document.getElementById('orders-history');
+  const activeOrders = orders.filter(o => o.status==='pending'||o.status==='served');
+  const archived = orders.filter(o => o.status==='archived');
+  updateActiveCount(orders);
+
+  // Split active orders by type
+  const dineInOrders    = activeOrders.filter(o => !o.orderType || o.orderType === 'dine-in');
+  const takeawayOrders  = activeOrders.filter(o => o.orderType === 'takeaway');
+  const deliveryOrders  = activeOrders.filter(o => o.orderType === 'delivery');
+
+  // Update subtab counts
+  document.getElementById('count-all').textContent      = activeOrders.length;
+  document.getElementById('count-dinein').textContent   = dineInOrders.length;
+  document.getElementById('count-takeaway').textContent = takeawayOrders.length;
+  document.getElementById('count-delivery').textContent = deliveryOrders.length;
+
+  // Render ALL tab
+  const allEl = document.getElementById('orders-list-all');
+  if (!activeOrders.length) {
+    allEl.innerHTML = '<p style="color:#555;font-size:.85rem;padding:.5rem 0">No active orders right now.</p>';
+  } else {
+    allEl.innerHTML = activeOrders.map(o => buildOrderCard(o)).join('');
+  }
+
+  // Render DINE IN tab
+  const dineInEl = document.getElementById('orders-list-dinein');
+  if (!dineInOrders.length) {
+    dineInEl.innerHTML = '<div class="empty-subsection"><div class="empty-icon">🍽</div>No active dine-in orders.</div>';
+  } else {
+    dineInEl.innerHTML = dineInOrders.map(o => buildOrderCard(o)).join('');
+  }
+
+  // Render TAKEAWAY tab
+  const takeawayEl = document.getElementById('orders-list-takeaway');
+  if (!takeawayOrders.length) {
+    takeawayEl.innerHTML = '<div class="empty-subsection"><div class="empty-icon">🥡</div>No active takeaway orders.</div>';
+  } else {
+    takeawayEl.innerHTML = takeawayOrders.map(o => buildOrderCard(o)).join('');
+  }
+
+  // Render DELIVERY tab
+  const deliveryEl = document.getElementById('orders-list-delivery');
+  if (!deliveryOrders.length) {
+    deliveryEl.innerHTML = '<div class="empty-subsection"><div class="empty-icon">🛵</div>No active delivery orders.</div>';
+  } else {
+    deliveryEl.innerHTML = deliveryOrders.map(o => buildOrderCard(o)).join('');
+  }
+
+  // Render history
+  if (!archived.length) {
+    hist.innerHTML = '<p style="color:#555;font-size:.85rem">No archived orders yet.</p>';
+  } else {
+    hist.innerHTML = '';
+    const byDate = {};
+    archived.forEach(o => {
+      const d = o.placedAt?(o.placedAt.toDate?o.placedAt.toDate():new Date(o.placedAt)):new Date();
+      const label = d.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+      if (!byDate[label]) byDate[label] = [];
+      byDate[label].push(o);
+    });
+    let grandTotal = 0;
+    Object.keys(byDate).forEach(date => {
+      const dayOrders = byDate[date];
+      const dayTotal = dayOrders.reduce((s,o)=>s+(o.total||0),0);
+      grandTotal += dayTotal;
+      hist.innerHTML += `<div style="font-size:.72rem;font-weight:700;color:#C9A84C;letter-spacing:.1em;text-transform:uppercase;padding:.6rem 0 .3rem;border-top:1px solid #222;margin-top:.5rem">${date} · ₹${dayTotal}</div>`;
+      dayOrders.forEach(o => {
+        const itemsStr = o.items.map(i=>`${i.name} × ${i.qty}`).join(', ');
+        const typeBadge = getOrderTypeBadge(o.orderType);
+        const locationDetail = getOrderLocationDetail(o);
+        hist.innerHTML += `
+        <div class="hist-row" id="hist-row-${o.id}">
+          <div class="hist-info">
+            <strong style="color:#ccc">${o.orderNumber||''}</strong> · ${typeBadge} · ${o.customerName}<br>
+            ${locationDetail ? `<div style="margin:.2rem 0">${locationDetail}</div>` : ''}
+            ${itemsStr}<br>
+            <span style="color:#555">${formatTime(o.placedAt)}</span>
+            <div class="order-del-confirm" id="del-confirm-${o.id}"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem;flex-shrink:0">
+            <div class="hist-total">₹${o.total}</div>
+            <button class="btn btn-sm"
+              style="background:#3a1a1a;color:#e87070;border:1px solid #7f1d1d;font-size:.72rem;padding:.35rem .7rem;white-space:nowrap"
+              onclick="startOrderDelete('${o.id}')">🗑 Delete</button>
+          </div>
+        </div>`;
+      });
+    });
+    hist.innerHTML += `<div style="display:flex;justify-content:space-between;align-items:center;padding:1rem 0 .3rem;border-top:2px solid #C9A84C;margin-top:1rem"><span style="font-size:.78rem;font-weight:700;color:#888;letter-spacing:.1em;text-transform:uppercase">Total Revenue</span><span style="font-size:1.2rem;font-weight:700;color:#C9A84C">₹${grandTotal}</span></div>`;
+  }
+}
+
+window.setOrderStatus = async function(id, status) {
+  await updateDoc(doc(db,'orders',id), { status });
+  showToast(status==='served'?'✓ Marked as Served':status==='archived'?'Moved to History':'Status updated');
+};
+
+function listenOrders() {
+  const q = query(collection(db,'orders'), orderBy('placedAt','desc'));
+  onSnapshot(q, snap => {
+    const orders = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderOrders(orders);
+  });
+}
+
+// ── CUSTOMERS ──
+async function loadCustomers() {
+  const snap = await getDocs(query(collection(db,'customers'), orderBy('firstSeen','desc')));
+  const el = document.getElementById('customers-list');
+  if (snap.empty) { el.innerHTML = '<p style="color:#555;font-size:.85rem">No customers yet.</p>'; return; }
+  el.innerHTML = `<div style="font-size:.72rem;color:#555;margin-bottom:.8rem">${snap.size} customer${snap.size!==1?'s':''} total</div>`;
+  snap.forEach(d => {
+    const c = d.data();
+    const date = c.firstSeen?(c.firstSeen.toDate?c.firstSeen.toDate():new Date(c.firstSeen)):new Date();
+    el.innerHTML += `
+    <div class="item-row">
+      <div style="width:40px;height:40px;border-radius:50%;background:#222;border:2px solid #333;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:1rem;color:#C9A84C;font-weight:700;flex-shrink:0">${(c.name||'?')[0].toUpperCase()}</div>
+      <div class="item-info">
+        <div class="item-name">${c.name||'Unknown'}</div>
+        <div class="item-meta">📞 ${c.phone||'—'} &nbsp;·&nbsp; ${c.orderCount||1} order${(c.orderCount||1)!==1?'s':''} &nbsp;·&nbsp; First visit: ${date.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div>
+      </div>
+    </div>`;
+  });
+}
+
+// ── FEEDBACK ──
+async function loadFeedback() {
+  const snap = await getDocs(query(collection(db,'feedback'), orderBy('submittedAt','desc')));
+  const el = document.getElementById('feedback-list');
+  const archEl = document.getElementById('feedback-archive');
+  const active = [], archived = [];
+  snap.forEach(d => {
+    const f = {...d.data(), id: d.id};
+    if (f.status==='archived'||f.status==='deleted') archived.push(f);
+    else active.push(f);
+  });
+  if (!active.length) {
+    el.innerHTML = '<p style="color:#555;font-size:.85rem">No feedback yet.</p>';
+  } else {
+    el.innerHTML = '';
+    active.forEach(f => {
+      const stars = '★'.repeat(f.stars||0)+'☆'.repeat(5-(f.stars||0));
+      const date = f.submittedAt?(f.submittedAt.toDate?f.submittedAt.toDate():new Date(f.submittedAt)):new Date();
+      el.innerHTML += `
+      <div class="order-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
+          <div>
+            <div style="font-size:.95rem;font-weight:600;color:#e0e0e0">${f.name||'Anonymous'} <span style="color:#C9A84C">${stars}</span></div>
+            <div style="font-size:.72rem;color:#666;margin-top:.2rem">${f.role||'Customer'} · ${date.toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</div>
+          </div>
+          <div style="font-size:.72rem;color:#555">${f.status==='handled'?'<span style="color:#27ae60">✓ Handled</span>':''}</div>
+        </div>
+        <div style="font-size:.82rem;color:#aaa;margin:.6rem 0;font-style:italic">"${f.text||''}"</div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem">
+          <button class="btn btn-sm" style="background:#27ae60;color:#fff" onclick="feedbackToReview('${f.id}')">+ Add to Reviews</button>
+          <button class="btn btn-sm btn-outline" onclick="feedbackHandle('${f.id}')">✓ Handled</button>
+          <button class="btn btn-sm" style="background:#e67e22;color:#fff" onclick="feedbackArchive('${f.id}')">Archive</button>
+        </div>
+      </div>`;
+    });
+  }
+  if (!archived.length) {
+    archEl.innerHTML = '<p style="color:#555;font-size:.85rem">No archived feedback.</p>';
+  } else {
+    archEl.innerHTML = '';
+    archived.forEach(f => {
+      const stars = '★'.repeat(f.stars||0)+'☆'.repeat(5-(f.stars||0));
+      archEl.innerHTML += `
+      <div class="order-card" style="opacity:.7">
+        <div style="font-size:.9rem;font-weight:600;color:#e0e0e0">${f.name||'Anonymous'} <span style="color:#C9A84C">${stars}</span></div>
+        <div style="font-size:.72rem;color:#666">${f.role||'Customer'}</div>
+        <div style="font-size:.8rem;color:#aaa;margin:.5rem 0;font-style:italic">"${f.text||''}"</div>
+        <button class="btn btn-del btn-sm" onclick="feedbackDelete('${f.id}')">🗑 Delete permanently</button>
+      </div>`;
+    });
+  }
+}
+window.feedbackToReview = async function(id) {
+  const snap = await getDoc(doc(db,'feedback',id));
+  if (!snap.exists()) return;
+  const f = snap.data();
+  await addDoc(collection(db,'reviews'), { name:f.name||'Guest', text:f.text||'', stars:f.stars||5, role:f.role||'Customer', featured:false });
+  await updateDoc(doc(db,'feedback',id), { status:'archived' });
+  showToast('✓ Added to Reviews!'); loadFeedback(); loadReviews();
+};
+window.feedbackHandle = async function(id) { await updateDoc(doc(db,'feedback',id),{status:'handled'}); showToast('✓ Marked as handled'); loadFeedback(); };
+window.feedbackArchive = async function(id) { await updateDoc(doc(db,'feedback',id),{status:'archived'}); showToast('Feedback archived'); loadFeedback(); };
+window.feedbackDelete = async function(id) {
+  if (!confirm('Permanently delete this feedback?')) return;
+  await deleteDoc(doc(db,'feedback',id));
+  showToast('Feedback deleted'); loadFeedback();
+};
+
+// ── SETTINGS ──
+async function loadSettings() {
+  try {
+    const d = await getDoc(doc(db,'settings','main'));
+    if (!d.exists()) return;
+    const s = d.data();
+    document.getElementById('open-toggle').classList.toggle('on', s.openStatus!==false);
+    document.getElementById('open-label').textContent = s.openStatus!==false?'Currently Open':'Currently Closed';
+    document.getElementById('h-mf').value = s.hoursMF||'';
+    document.getElementById('h-sat').value = s.hoursSat||'';
+    document.getElementById('h-sun').value = s.hoursSun||'';
+    document.getElementById('announce').value = s.announcement||'';
+    const storyThumb = document.getElementById('story-img-thumb');
+    const storyPreview = document.getElementById('story-img-preview');
+    if (s.storyBgImage) { storyThumb.src = s.storyBgImage; storyPreview.style.display = 'block'; }
+  } catch(e) { console.log('Settings not found yet.'); }
+}
+window.saveStoryImage = async function() {
+  const file = document.getElementById('story-img-file').files[0];
+  if (!file) { showToast('⚠ Please select an image first'); return; }
+  showToast('Uploading image...');
+  try {
+    const url = await uploadToCloudinary(file);
+    await setDoc(doc(db,'settings','main'), { storyBgImage: url }, { merge: true });
+    document.getElementById('story-img-thumb').src = url;
+    document.getElementById('story-img-preview').style.display = 'block';
+    document.getElementById('story-img-file').value = '';
+    showToast('✓ Story image updated!');
+  } catch(e) { showToast('⚠ Upload failed. Try again.'); console.error(e); }
+};
+window.toggleOpen = async function() {
+  const el = document.getElementById('open-toggle');
+  el.classList.toggle('on');
+  const open = el.classList.contains('on');
+  document.getElementById('open-label').textContent = open?'Currently Open':'Currently Closed';
+  await setDoc(doc(db,'settings','main'),{openStatus:open},{merge:true});
+  showToast(open?'✓ Café marked as Open':'✓ Café marked as Closed');
+};
+window.saveSettings = async function() {
+  await setDoc(doc(db,'settings','main'),{
+    hoursMF: document.getElementById('h-mf').value.trim(),
+    hoursSat: document.getElementById('h-sat').value.trim(),
+    hoursSun: document.getElementById('h-sun').value.trim(),
+    announcement: document.getElementById('announce').value.trim(),
+  },{merge:true});
+  showToast('✓ Settings saved!');
+};
+</script>
+
+<script>
+function login(){ window.login && window.login(); }
+function signout(){ window.signout && window.signout(); }
+function showPanel(id,el){ window.showPanel && window.showPanel(id,el); }
+function addMenuItem(){ window.addMenuItem && window.addMenuItem(); }
+function toggleActive(id,cur){ window.toggleActive && window.toggleActive(id,cur); }
+function deleteMenuItem(id){ window.deleteMenuItem && window.deleteMenuItem(id); }
+function openMenuEdit(id){ window.openMenuEdit && window.openMenuEdit(id); }
+function closeMenuModal(){ window.closeMenuModal && window.closeMenuModal(); }
+function saveMenuEdit(){ window.saveMenuEdit && window.saveMenuEdit(); }
+function addReview(){ window.addReview && window.addReview(); }
+function deleteReview(id){ window.deleteReview && window.deleteReview(id); }
+function openReviewEdit(id){ window.openReviewEdit && window.openReviewEdit(id); }
+function closeReviewModal(){ window.closeReviewModal && window.closeReviewModal(); }
+function saveReviewEdit(){ window.saveReviewEdit && window.saveReviewEdit(); }
+function toggleOpen(){ window.toggleOpen && window.toggleOpen(); }
+function saveSettings(){ window.saveSettings && window.saveSettings(); }
+function setOrderStatus(id,s){ window.setOrderStatus && window.setOrderStatus(id,s); }
+function feedbackToReview(id){ window.feedbackToReview && window.feedbackToReview(id); }
+function feedbackHandle(id){ window.feedbackHandle && window.feedbackHandle(id); }
+function feedbackArchive(id){ window.feedbackArchive && window.feedbackArchive(id); }
+function feedbackDelete(id){ window.feedbackDelete && window.feedbackDelete(id); }
+function showDelStep1(){ window.showDelStep1 && window.showDelStep1(); }
+function showDelStep2(){ window.showDelStep2 && window.showDelStep2(); }
+function cancelDel(){ window.cancelDel && window.cancelDel(); }
+function confirmDeleteHistory(){ window.confirmDeleteHistory && window.confirmDeleteHistory(); }
+function startOrderDelete(id){ window.startOrderDelete && window.startOrderDelete(id); }
+function orderDelStep2(id){ window.orderDelStep2 && window.orderDelStep2(id); }
+function finalOrderDel(id){ window.finalOrderDel && window.finalOrderDel(id); }
+function cancelOrderDel(id){ window.cancelOrderDel && window.cancelOrderDel(id); }
+function saveStoryImage(){ window.saveStoryImage && window.saveStoryImage(); }
+function toggleChpw(){ window.toggleChpw && window.toggleChpw(); }
+function closeChpw(){ window.closeChpw && window.closeChpw(); }
+function verifyMasterKey(){ window.verifyMasterKey && window.verifyMasterKey(); }
+function checkPwStrength(){ window.checkPwStrength && window.checkPwStrength(); }
+function saveNewPassword(){ window.saveNewPassword && window.saveNewPassword(); }
+function toggleEye(a,b){ window.toggleEye && window.toggleEye(a,b); }
+function switchOrderSubtab(tab){ window.switchOrderSubtab && window.switchOrderSubtab(tab); }
+</script>
+</body>
+</html>
